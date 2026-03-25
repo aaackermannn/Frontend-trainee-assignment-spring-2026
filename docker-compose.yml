@@ -1,0 +1,17 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "80:80"
+    depends_on:
+      - server

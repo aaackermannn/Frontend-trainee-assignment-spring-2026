@@ -22,7 +22,17 @@ fastify.use((_, __, next) =>
 // Настройка CORS
 fastify.use((_, reply, next) => {
   reply.setHeader('Access-Control-Allow-Origin', '*');
+  reply.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE,OPTIONS');
+  reply.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With',
+  );
   next();
+});
+
+// Обработка preflight-запросов браузера (CORS)
+fastify.options('*', (_request, reply) => {
+  reply.status(204).send();
 });
 
 interface ItemGetRequest extends Fastify.RequestGenericInterface {
@@ -105,6 +115,7 @@ fastify.get<ItemsGetRequest>('/items', request => {
       })
       .slice(skip, skip + limit)
       .map(item => ({
+        id: item.id,
         category: item.category,
         title: item.title,
         price: item.price,
@@ -163,9 +174,11 @@ fastify.put<ItemUpdateRequest>('/items/:id', (request, reply) => {
   }
 });
 
-const port = Number(process.env.port) ?? 8080;
+const parsedPort = Number.parseInt(process.env.PORT ?? '8080', 10);
+const port = Number.isFinite(parsedPort) ? parsedPort : 8080;
 
-fastify.listen({ port }, function (err, _address) {
+
+fastify.listen({ port, host: '0.0.0.0' }, function (err, _address) {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
